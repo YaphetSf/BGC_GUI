@@ -1,6 +1,6 @@
-# SimpleBGC GUI Launcher Helper
+# SimpleBGC GUI MacOS Launcher Helper
 
-**Running Basecam SimpleBGC on Apple Silicon and missing serial ports?**  
+**Running Basecam SimpleBGC on Apple Silicon and missing serial ports?**
 Grab this repo and follow the steps below to get the official GUI talking to your Basecam board easily!
 
 ## Setup
