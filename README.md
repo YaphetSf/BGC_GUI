@@ -26,9 +26,20 @@ Afterwards on just call:
 ./run_mac.sh
 ```
 
+## Level up your game
+To use a native MacOS app, run this in terminal:
+```bash
+uv run Automator_setup.py
+```
+If you don't have [`uv`](https://github.com/astral-sh/uv) installed:
+1. Install it once (recommended):
+   ```bash
+   curl -Ls https://astral.sh/install.sh | sh
+   ```
+   Then re-run `uv run Automator_setup.py`.
+2. Or, fall back to the system Python:
+   ```bash
+   python3 Automator_setup.py
+   ```
 
-## Troubleshooting
-- Ensure the extracted GUI folder remains intact; the script searches within `SimpleBGC_GUI/` for `SimpleBGC_GUI.jar`.
-- See `Docs/INSTALLATION_MAC.md` for detailed Java installation steps.
-- For other issues, check `Docs/TROUBLESHOOTING.md` or open an issue.
 
