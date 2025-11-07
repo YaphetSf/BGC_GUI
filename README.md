@@ -1,7 +1,7 @@
 # SimpleBGC GUI MacOS Launcher Helper
 
 **Running Basecam SimpleBGC on Apple Silicon and missing serial ports?**
-Grab this repo and follow the steps below to get the official GUI talking to your Basecam board easily!
+Grab this repo and follow the steps below to get the official GUI working as a native MacOS APP and talking to your Basecam board easily!
 
 ## Setup
 
@@ -35,21 +35,14 @@ Afterwards on just call:
 ```
 
 ## Level up your game
-
-To use a native MacOS app, run this in terminal:
-
+To use a native MacOS app, follow the steps below.
+1. Open "Automator" App and "New Document"
+2. Select "Application"
+3. Search in "Action" for "Run shell script"
+4. Copy and paste the following commands:
 ```bash
-uv run Automator_setup.py
+cd path/to/your/script
+chmod +x run_mac.sh
+./run_mac.sh
 ```
-
-If you don't have [`uv`](https://github.com/astral-sh/uv) installed:
-
-1. Install it once (recommended):
-   ```bash
-   curl -Ls https://astral.sh/install.sh | sh
-   ```
-   Then re-run `uv run Automator_setup.py`.
-2. Or, fall back to the system Python:
-   ```bash
-   python3 Automator_setup.py
-   ```
+5. Press save once done.

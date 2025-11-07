@@ -1,4 +1,5 @@
-SimpleBGC_GUI
+SimpleBGC_GUI/*
+!SimpleBGC_GUI/.gitkeep
 .DS_Store
 .venv
 __pycache__
