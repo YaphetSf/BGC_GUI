@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run SimpleBGC GUI 2.73.8 on macOS
+# Run SimpleBGC on macOS with serial port working properly!
 # This script works on both Intel Macs and Apple Silicon Macs (using Rosetta 2)
 
 # Colors for output
@@ -9,7 +9,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo "=========================================="
-echo "SimpleBGC GUI 2.73.8 Launcher for macOS"
+echo "SimpleBGC GUI Launcher for macOS"
 echo "=========================================="
 echo ""
 
@@ -17,11 +17,39 @@ echo ""
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
-# Check if jar file exists
-if [ ! -f "SimpleBGC_GUI.jar" ]; then
-    echo -e "${RED}ERROR: SimpleBGC_GUI.jar not found!${NC}"
-    echo "Please run this script from the SimpleBGC_GUI_2_73_8 directory"
+# Locate the SimpleBGC GUI assets
+GUI_BASE_DIR="$SCRIPT_DIR/SimpleBGC_GUI"
+
+if [ ! -d "$GUI_BASE_DIR" ]; then
+    echo -e "${RED}ERROR: SimpleBGC_GUI directory not found!${NC}"
+    echo "Expected to find the official SimpleBGC GUI extracted under:"
+    echo "  $GUI_BASE_DIR"
+    echo ""
+    echo "Download the macOS package from Basecam, extract it, and move the"
+    echo "extracted folder (e.g. SimpleBGC_GUI_x_xx_x) into SimpleBGC_GUI/."
     exit 1
+fi
+
+JAR_PATH=$(find "$GUI_BASE_DIR" -maxdepth 2 -type f -name "SimpleBGC_GUI.jar" 2>/dev/null | sort | head -n 1)
+
+if [ -z "$JAR_PATH" ]; then
+    echo -e "${RED}ERROR: SimpleBGC_GUI.jar not found inside SimpleBGC_GUI/.${NC}"
+    echo "Make sure you extracted the official GUI files into:"
+    echo "  $GUI_BASE_DIR"
+    echo "The folder should contain SimpleBGC_GUI.jar (e.g. SimpleBGC_GUI_x_xx_x/SimpleBGC_GUI.jar)."
+    exit 1
+fi
+
+APP_DIR="$(dirname "$JAR_PATH")"
+
+echo "Using application directory: $APP_DIR"
+echo ""
+
+GUI_FOLDER_NAME="$(basename "$APP_DIR")"
+GUI_VERSION_DISPLAY="SimpleBGC GUI"
+if [[ "$GUI_FOLDER_NAME" =~ SimpleBGC_GUI_(.+) ]]; then
+    RAW_VERSION="${BASH_REMATCH[1]}"
+    GUI_VERSION_DISPLAY="SimpleBGC GUI ${RAW_VERSION//_/.}"
 fi
 
 # Detect architecture
@@ -29,20 +57,15 @@ ARCH=$(uname -m)
 echo "Detected architecture: $ARCH"
 echo ""
 
-# Try to find Java 8 first, then other versions
+# Try to find x86_64 Java 8
 JAVA_FOUND=0
 echo "Looking for x86_64 Java installation..."
 
-# List of Java paths to check (x86_64 versions only)
+# List of Java 8 paths to check (x86_64 builds only)
 JAVA_PATHS=(
     "/Library/Java/JavaVirtualMachines/temurin-8.jdk/Contents/Home/bin/java"
-    "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java"
-    "/Library/Java/JavaVirtualMachines/temurin-11.jdk/Contents/Home/bin/java"
     "/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home/bin/java"
-    "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home/bin/java"
-    "/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home/bin/java"
     "/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/bin/java"
-    "/Library/Java/JavaVirtualMachines/adoptopenjdk-17.jdk/Contents/Home/bin/java"
     "/usr/local/bin/java"
 )
 
@@ -51,16 +74,16 @@ for JAVA_PATH in "${JAVA_PATHS[@]}"; do
         # Check if it's x86_64 Java
         FILE_TYPE=$(file "$JAVA_PATH" 2>/dev/null)
         if echo "$FILE_TYPE" | grep -q "x86_64"; then
-            JAVA_CMD="$JAVA_PATH"
-            JAVA_FOUND=1
-            echo -e "${GREEN}Found x86_64 Java at:${NC}"
-            echo "  $JAVA_PATH"
-            
-            # Show version info
-            JAVA_VERSION=$("$JAVA_CMD" -version 2>&1 | head -1)
-            echo "  $JAVA_VERSION"
-            echo ""
-            break
+            JAVA_VERSION_LINE=$("$JAVA_PATH" -version 2>&1 | head -n 1)
+            if echo "$JAVA_VERSION_LINE" | grep -Eq '"1\.8\.|"8\.'; then
+                JAVA_CMD="$JAVA_PATH"
+                JAVA_FOUND=1
+                echo -e "${GREEN}Found x86_64 Java 8 at:${NC}"
+                echo "  $JAVA_PATH"
+                echo "  $JAVA_VERSION_LINE"
+                echo ""
+                break
+            fi
         fi
     fi
 done
@@ -68,11 +91,11 @@ done
 if [ $JAVA_FOUND -eq 0 ]; then
     echo -e "${RED}ERROR: Could not find x86_64 Java installation!${NC}"
     echo ""
-    echo "Please install x86_64 Java 8 or higher:"
+    echo "Please install x86_64 Java 8:"
     echo ""
-    echo "1. Download from: https://www.azul.com/downloads/?package=jdk"
-    echo "2. Choose: ${YELLOW}x64 macOS DMG Installer${NC} (NOT ARM64)"
-    echo "3. Install the DMG file"
+    echo "1. Download from: https://adoptium.net/temurin/releases/?version=8"
+    echo "2. Choose: ${YELLOW}Temurin 8 • macOS • x64 .pkg${NC} (NOT ARM64)"
+    echo "3. Install the package"
     echo "4. Run this script again"
     echo ""
     echo "For detailed instructions, see: ../INSTALLATION_MAC.md"
@@ -86,9 +109,11 @@ if [ "$ARCH" = "arm64" ]; then
 fi
 
 echo "=========================================="
-echo -e "${GREEN}Starting SimpleBGC GUI 2.73.8...${NC}"
+echo -e "${GREEN}Starting ${GUI_VERSION_DISPLAY}...${NC}"
 echo "=========================================="
 echo ""
+
+pushd "$APP_DIR" >/dev/null
 
 # Run the Java application
 if [ $USE_ROSETTA -eq 1 ]; then
@@ -114,6 +139,8 @@ else
 fi
 
 EXIT_CODE=$?
+
+popd >/dev/null
 
 echo ""
 if [ $EXIT_CODE -eq 0 ]; then
