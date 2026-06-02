@@ -2,6 +2,8 @@ SimpleBGC_GUI/*
 !SimpleBGC_GUI/.gitkeep
 !SimpleBGC_GUI/SimpleBGC_GUI_2_74_3.zip
 .java/
+*.app/
+launcher.log
 .DS_Store
 .venv
 __pycache__

@@ -31,6 +31,7 @@ curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | 
 ```
 
 This downloads the launcher helper repo into `BGC_GUI/` under the current Terminal folder, runs `chmod +x run_mac.sh`, and starts `run_mac.sh`.
+It also creates `BGC_GUI/SimpleBGC GUI.app`, so you can launch the GUI by double-clicking the app later.
 
 To install somewhere else:
 
@@ -44,6 +45,12 @@ To install without starting the launcher immediately:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash -s -- --no-run
+```
+
+To skip creating the macOS app launcher:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash -s -- --no-app
 ```
 
 ## Manual run
@@ -61,15 +68,16 @@ Afterwards on just call:
 ./run_mac.sh
 ```
 
-## Level up your game
-To use a native MacOS app, follow the steps below.
-1. Open "Automator" App and "New Document"
-2. Select "Application"
-3. Search in "Action" for "Run shell script"
-4. Copy and paste the following commands:
+## macOS app launcher
+
+The installer automatically creates:
+
 ```bash
-cd path/to/your/script
-chmod +x run_mac.sh
-./run_mac.sh
+BGC_GUI/SimpleBGC GUI.app
 ```
-5. Press save once done.
+
+Double-click it to launch SimpleBGC GUI without opening Terminal. Launcher logs are written to:
+
+```bash
+BGC_GUI/launcher.log
+```

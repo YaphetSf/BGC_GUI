@@ -15,6 +15,7 @@ INSTALL_DIR="${BGC_GUI_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 TEMURIN_VERSION="${BGC_GUI_JAVA_VERSION:-25}"
 TEMURIN_API_URL="https://api.adoptium.net/v3/binary/latest/${TEMURIN_VERSION}/ga/mac/x64/jre/hotspot/normal/eclipse"
 RUN_AFTER_INSTALL=1
+CREATE_APP=1
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -30,8 +31,12 @@ while [ $# -gt 0 ]; do
             RUN_AFTER_INSTALL=0
             shift
             ;;
+        --no-app)
+            CREATE_APP=0
+            shift
+            ;;
         --help|-h)
-            echo "Usage: install.sh [--dir PATH] [--no-run]"
+            echo "Usage: install.sh [--dir PATH] [--no-run] [--no-app]"
             echo ""
             echo "Environment:"
             echo "  BGC_GUI_INSTALL_DIR=/path/to/install"
@@ -195,6 +200,47 @@ ensure_x86_64_java() {
     install_portable_temurin
 }
 
+create_launcher_app() {
+    local app_path
+    local tmp_dir
+    local script_file
+    local escaped_install_dir
+
+    if [ "$CREATE_APP" -eq 0 ]; then
+        return
+    fi
+
+    if ! command_exists osacompile; then
+        echo -e "${YELLOW}WARNING: osacompile not found; skipping .app creation.${NC}"
+        echo ""
+        return
+    fi
+
+    app_path="$INSTALL_DIR/SimpleBGC GUI.app"
+    tmp_dir="$(mktemp -d)"
+    script_file="$tmp_dir/SimpleBGC GUI.applescript"
+    escaped_install_dir=$(printf '%s' "$INSTALL_DIR" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
+    cat > "$script_file" <<APPLESCRIPT
+set installDir to "$escaped_install_dir"
+set logPath to installDir & "/launcher.log"
+do shell script "cd " & quoted form of installDir & " && ./run_mac.sh >> " & quoted form of logPath & " 2>&1 &"
+APPLESCRIPT
+
+    rm -rf "$app_path"
+    osacompile -o "$app_path" "$script_file"
+    rm -rf "$tmp_dir"
+
+    if [ -f "$INSTALL_DIR/SimpleBGC.icns" ] && [ -d "$app_path/Contents/Resources" ]; then
+        cp "$INSTALL_DIR/SimpleBGC.icns" "$app_path/Contents/Resources/applet.icns"
+        touch "$app_path"
+    fi
+
+    echo -e "${GREEN}Created macOS app launcher:${NC}"
+    echo "  $app_path"
+    echo ""
+}
+
 ensure_install_parent() {
     local parent_dir
 
@@ -279,6 +325,7 @@ echo ""
 
 ensure_x86_64_java
 ensure_rosetta
+create_launcher_app
 
 if [ "$RUN_AFTER_INSTALL" -eq 0 ]; then
     echo "Skipping launch because --no-run was passed."
