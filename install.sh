@@ -56,6 +56,46 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+rosetta_available() {
+    /usr/bin/arch -x86_64 /usr/bin/true >/dev/null 2>&1
+}
+
+ensure_rosetta() {
+    local arch_name
+
+    arch_name=$(uname -m)
+    if [ "$arch_name" != "arm64" ]; then
+        return
+    fi
+
+    if rosetta_available; then
+        echo -e "${GREEN}Rosetta 2 is available.${NC}"
+        echo ""
+        return
+    fi
+
+    echo "Rosetta 2 is required to run x86_64 Java on Apple Silicon."
+    echo "Installing Rosetta 2..."
+    echo ""
+
+    if [ ! -x /usr/sbin/softwareupdate ]; then
+        echo -e "${RED}ERROR: softwareupdate command not found; cannot install Rosetta 2.${NC}"
+        exit 1
+    fi
+
+    /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+
+    if ! rosetta_available; then
+        echo -e "${RED}ERROR: Rosetta 2 is still not available after installation.${NC}"
+        echo "Try running this manually, then run the installer again:"
+        echo "  softwareupdate --install-rosetta --agree-to-license"
+        exit 1
+    fi
+
+    echo -e "${GREEN}Rosetta 2 is available.${NC}"
+    echo ""
+}
+
 java_binary_supports_x86_64() {
     local java_path="$1"
     local file_type
@@ -238,6 +278,7 @@ echo "Run script: $INSTALL_DIR/run_mac.sh"
 echo ""
 
 ensure_x86_64_java
+ensure_rosetta
 
 if [ "$RUN_AFTER_INSTALL" -eq 0 ]; then
     echo "Skipping launch because --no-run was passed."

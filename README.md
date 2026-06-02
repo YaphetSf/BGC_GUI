@@ -20,7 +20,7 @@ For manual run, install an x86_64 (Intel) Java runtime. The Java version does no
    - Do not choose `AArch64` / `ARM64`, because the Basecam GUI serial library is x86_64.
    - Follow the instructions in the installer.
 
-On Apple Silicon Macs the script automatically invokes Rosetta (`arch -x86_64`) so the Intel JVM can load the serial library correctly.
+On Apple Silicon Macs, `install.sh` installs Rosetta 2 if needed, and `run_mac.sh` invokes Rosetta (`arch -x86_64`) so the Intel JVM can load the serial library correctly.
 
 ## One-command install
 

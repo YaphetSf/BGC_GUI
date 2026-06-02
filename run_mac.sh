@@ -78,6 +78,43 @@ ARCH=$(uname -m)
 echo "Detected architecture: $ARCH"
 echo ""
 
+rosetta_available() {
+    /usr/bin/arch -x86_64 /usr/bin/true >/dev/null 2>&1
+}
+
+ensure_rosetta() {
+    if [ "$ARCH" != "arm64" ]; then
+        return
+    fi
+
+    if rosetta_available; then
+        return
+    fi
+
+    echo "Rosetta 2 is required to run x86_64 Java on Apple Silicon."
+    echo "Installing Rosetta 2..."
+    echo ""
+
+    if [ ! -x /usr/sbin/softwareupdate ]; then
+        echo -e "${RED}ERROR: softwareupdate command not found; cannot install Rosetta 2.${NC}"
+        exit 1
+    fi
+
+    /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+
+    if ! rosetta_available; then
+        echo -e "${RED}ERROR: Rosetta 2 is still not available after installation.${NC}"
+        echo "Try running this manually, then start the launcher again:"
+        echo "  softwareupdate --install-rosetta --agree-to-license"
+        exit 1
+    fi
+
+    echo -e "${GREEN}Rosetta 2 is available.${NC}"
+    echo ""
+}
+
+ensure_rosetta
+
 # Find any x86_64 Java runtime. Java 8, 11, 17, 21, 25, etc. are all accepted
 # as long as the runtime can load the x86_64 serial native library bundled with
 # SimpleBGC GUI.
@@ -113,7 +150,11 @@ java_binary_supports_x86_64() {
 }
 
 java_version_line() {
-    "$1" -version 2>&1 | head -n 1
+    if [ "$ARCH" = "arm64" ]; then
+        /usr/bin/arch -x86_64 "$1" -version 2>&1 | head -n 1
+    else
+        "$1" -version 2>&1 | head -n 1
+    fi
 }
 
 # Prefer the portable Java runtime installed by install.sh.
@@ -188,7 +229,7 @@ if [ $USE_ROSETTA -eq 1 ]; then
     # Apple Silicon Mac: use Rosetta 2
     echo "Using Rosetta 2 to run x86_64 Java"
     echo ""
-    arch -x86_64 "$JAVA_CMD" \
+    /usr/bin/arch -x86_64 "$JAVA_CMD" \
         -Dsimplebgc_gui.SimpleBGC_GUIView.Logger.level=0 \
         -Djava.library.path="./lib" \
         -Dlog4j.configuration=log4j.properties \
