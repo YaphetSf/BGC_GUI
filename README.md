@@ -5,22 +5,46 @@ Grab this repo and follow the steps below to get the official GUI working as a n
 
 ## Setup
 
-### Prepare your Basecam GUI
+### Basecam GUI package
 
-1. Download the official SimpleBGC GUI for macOS from [basecamelectronics.com/downloads](https://www.basecamelectronics.com/downloads/32bit/#latest).
-2. Extract the downloaded archive (it will contain a folder such as `SimpleBGC_GUI_2_73_8`).
-3. Copy the extracted folder into `SimpleBGC_GUI/` in this repository, so the JAR ends up at `SimpleBGC_GUI/SimpleBGC_GUI_2_73_8/SimpleBGC_GUI.jar`.
+This repo includes `SimpleBGC_GUI/SimpleBGC_GUI_2_74_3.zip`.
+On first launch, `run_mac.sh` automatically extracts it into `SimpleBGC_GUI/` and starts `SimpleBGC_GUI.jar`.
 
 ### Java Requirements
 
-1. Install an x86_64 (Intel) Java runtime. The Java version does not need to be 8; newer versions such as 11, 17, 21, or 25 are also accepted.
+For one-command install, no manual Java setup is needed. If no x86_64 Java runtime is found, `install.sh` automatically downloads Eclipse Temurin x64 JRE into `~/BGC_GUI/.java/`.
+
+For manual run, install an x86_64 (Intel) Java runtime. The Java version does not need to be 8; newer versions such as 11, 17, 21, or 25 are also accepted.
    - Visit [adoptium.net/temurin/releases](https://adoptium.net/temurin/releases/).
    - Choose `macOS`, `x64`, and download the `.pkg` installer.
    - Do not choose `AArch64` / `ARM64`, because the Basecam GUI serial library is x86_64.
    - Follow the instructions in the installer.
-2. On Apple Silicon Macs the script automatically invokes Rosetta (`arch -x86_64`) so the Intel JVM can load the serial library correctly.
 
-## Run
+On Apple Silicon Macs the script automatically invokes Rosetta (`arch -x86_64`) so the Intel JVM can load the serial library correctly.
+
+## One-command install
+
+Run this in Terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash
+```
+
+This downloads the launcher helper repo into `~/BGC_GUI`, runs `chmod +x run_mac.sh`, and starts `run_mac.sh`.
+
+To install somewhere else:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash -s -- --dir ~/Applications/BGC_GUI
+```
+
+To install without starting the launcher immediately:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash -s -- --no-run
+```
+
+## Manual run
 
 First time use, run this in terminal:
 

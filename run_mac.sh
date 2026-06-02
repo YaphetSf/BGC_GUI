@@ -20,6 +20,7 @@ cd "$SCRIPT_DIR"
 
 # Locate the SimpleBGC GUI assets
 GUI_BASE_DIR="$SCRIPT_DIR/SimpleBGC_GUI"
+BUNDLED_GUI_ZIP="$GUI_BASE_DIR/SimpleBGC_GUI_2_74_3.zip"
 
 if [ ! -d "$GUI_BASE_DIR" ]; then
     echo -e "${RED}ERROR: SimpleBGC_GUI directory not found!${NC}"
@@ -31,13 +32,32 @@ if [ ! -d "$GUI_BASE_DIR" ]; then
     exit 1
 fi
 
-JAR_PATH=$(find "$GUI_BASE_DIR" -maxdepth 2 -type f -name "SimpleBGC_GUI.jar" 2>/dev/null | sort | head -n 1)
+find_gui_jar() {
+    find "$GUI_BASE_DIR" -maxdepth 2 -type f -name "SimpleBGC_GUI.jar" 2>/dev/null | sort | head -n 1
+}
+
+JAR_PATH=$(find_gui_jar)
+
+if [ -z "$JAR_PATH" ] && [ -f "$BUNDLED_GUI_ZIP" ]; then
+    if ! command -v unzip >/dev/null 2>&1; then
+        echo -e "${RED}ERROR: SimpleBGC GUI zip is bundled, but unzip is not available.${NC}"
+        exit 1
+    fi
+
+    echo "SimpleBGC_GUI.jar not found. Extracting bundled GUI zip..."
+    echo "  $BUNDLED_GUI_ZIP"
+    echo ""
+
+    unzip -q "$BUNDLED_GUI_ZIP" -d "$GUI_BASE_DIR"
+    JAR_PATH=$(find_gui_jar)
+fi
 
 if [ -z "$JAR_PATH" ]; then
     echo -e "${RED}ERROR: SimpleBGC_GUI.jar not found inside SimpleBGC_GUI/.${NC}"
-    echo "Make sure you extracted the official GUI files into:"
-    echo "  $GUI_BASE_DIR"
-    echo "The folder should contain SimpleBGC_GUI.jar (e.g. SimpleBGC_GUI_x_xx_x/SimpleBGC_GUI.jar)."
+    echo "Expected either:"
+    echo "  $BUNDLED_GUI_ZIP"
+    echo "or an extracted GUI folder containing:"
+    echo "  SimpleBGC_GUI_x_xx_x/SimpleBGC_GUI.jar"
     exit 1
 fi
 
@@ -95,6 +115,13 @@ java_binary_supports_x86_64() {
 java_version_line() {
     "$1" -version 2>&1 | head -n 1
 }
+
+# Prefer the portable Java runtime installed by install.sh.
+for JAVA_PATH in "$SCRIPT_DIR"/.java/*/Contents/Home/bin/java \
+                 "$SCRIPT_DIR"/.java/*/*.jdk/Contents/Home/bin/java \
+                 "$SCRIPT_DIR"/.java/*/bin/java; do
+    add_java_candidate "$JAVA_PATH"
+done
 
 # Prefer an explicitly selected JAVA_HOME if it is usable.
 if [ -n "$JAVA_HOME" ]; then
