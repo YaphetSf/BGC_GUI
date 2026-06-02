@@ -13,11 +13,12 @@ Grab this repo and follow the steps below to get the official GUI working as a n
 
 ### Java Requirements
 
-1. Install an x86_64 (Intel) Java runtime. The easiest option is Temurin from Adoptium:
-   - Visit [adoptium.net/temurin/releases](https://adoptium.net/temurin/releases/?version=8).
-   - Choose version 8, `macOS`, `x64`, and download the `.pkg` installer.
-   - Follow the instruction on the installer.
-2. On Apple Silicon Macs the script automatically invokes Rosetta (`arch -x86_64`) so the Intel JVM works correctly.
+1. Install an x86_64 (Intel) Java runtime. The Java version does not need to be 8; newer versions such as 11, 17, 21, or 25 are also accepted.
+   - Visit [adoptium.net/temurin/releases](https://adoptium.net/temurin/releases/).
+   - Choose `macOS`, `x64`, and download the `.pkg` installer.
+   - Do not choose `AArch64` / `ARM64`, because the Basecam GUI serial library is x86_64.
+   - Follow the instructions in the installer.
+2. On Apple Silicon Macs the script automatically invokes Rosetta (`arch -x86_64`) so the Intel JVM can load the serial library correctly.
 
 ## Run
 

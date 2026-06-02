@@ -1,6 +1,7 @@
 #!/bin/bash
-# Run SimpleBGC on macOS with serial port working properly!
-# This script works on both Intel Macs and Apple Silicon Macs (using Rosetta 2)
+# Run SimpleBGC on macOS with serial port working properly.
+# The Basecam GUI serial library is x86_64, so Apple Silicon Macs must run an
+# x86_64 Java runtime through Rosetta 2. The Java version itself is not fixed.
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -57,48 +58,88 @@ ARCH=$(uname -m)
 echo "Detected architecture: $ARCH"
 echo ""
 
-# Try to find x86_64 Java 8
+# Find any x86_64 Java runtime. Java 8, 11, 17, 21, 25, etc. are all accepted
+# as long as the runtime can load the x86_64 serial native library bundled with
+# SimpleBGC GUI.
 JAVA_FOUND=0
+JAVA_CMD=""
+JAVA_CANDIDATES=()
+
 echo "Looking for x86_64 Java installation..."
 
-# List of Java 8 paths to check (x86_64 builds only)
-JAVA_PATHS=(
-    "/Library/Java/JavaVirtualMachines/temurin-8.jdk/Contents/Home/bin/java"
-    "/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home/bin/java"
-    "/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/bin/java"
-    "/usr/local/bin/java"
-)
+add_java_candidate() {
+    local candidate="$1"
 
-for JAVA_PATH in "${JAVA_PATHS[@]}"; do
-    if [ -f "$JAVA_PATH" ]; then
-        # Check if it's x86_64 Java
-        FILE_TYPE=$(file "$JAVA_PATH" 2>/dev/null)
-        if echo "$FILE_TYPE" | grep -q "x86_64"; then
-            JAVA_VERSION_LINE=$("$JAVA_PATH" -version 2>&1 | head -n 1)
-            if echo "$JAVA_VERSION_LINE" | grep -Eq '"1\.8\.|"8\.'; then
-                JAVA_CMD="$JAVA_PATH"
-                JAVA_FOUND=1
-                echo -e "${GREEN}Found x86_64 Java 8 at:${NC}"
-                echo "  $JAVA_PATH"
-                echo "  $JAVA_VERSION_LINE"
-                echo ""
-                break
-            fi
+    if [ -z "$candidate" ] || [ ! -x "$candidate" ]; then
+        return
+    fi
+
+    local existing
+    for existing in "${JAVA_CANDIDATES[@]}"; do
+        if [ "$existing" = "$candidate" ]; then
+            return
         fi
+    done
+
+    JAVA_CANDIDATES+=("$candidate")
+}
+
+java_binary_supports_x86_64() {
+    local java_path="$1"
+    local file_type
+
+    file_type=$(file -L "$java_path" 2>/dev/null)
+    echo "$file_type" | grep -q "x86_64"
+}
+
+java_version_line() {
+    "$1" -version 2>&1 | head -n 1
+}
+
+# Prefer an explicitly selected JAVA_HOME if it is usable.
+if [ -n "$JAVA_HOME" ]; then
+    add_java_candidate "$JAVA_HOME/bin/java"
+fi
+
+# Ask macOS for the preferred x86_64 JVM. This covers Temurin/Zulu/Oracle/etc.
+# installed under /Library/Java/JavaVirtualMachines, including newer LTS builds.
+JAVA_HOME_X64=$(/usr/libexec/java_home -a x86_64 2>/dev/null)
+if [ -n "$JAVA_HOME_X64" ]; then
+    add_java_candidate "$JAVA_HOME_X64/bin/java"
+fi
+
+# Also scan common JVM locations in case java_home is not aware of an install.
+for JAVA_PATH in /Library/Java/JavaVirtualMachines/*/Contents/Home/bin/java \
+                 /usr/local/bin/java \
+                 /opt/homebrew/bin/java; do
+    add_java_candidate "$JAVA_PATH"
+done
+
+for JAVA_PATH in "${JAVA_CANDIDATES[@]}"; do
+    if java_binary_supports_x86_64 "$JAVA_PATH"; then
+        JAVA_CMD="$JAVA_PATH"
+        JAVA_FOUND=1
+        JAVA_VERSION_LINE=$(java_version_line "$JAVA_CMD")
+        echo -e "${GREEN}Found x86_64 Java at:${NC}"
+        echo "  $JAVA_CMD"
+        echo "  $JAVA_VERSION_LINE"
+        echo ""
+        break
     fi
 done
 
 if [ $JAVA_FOUND -eq 0 ]; then
-    echo -e "${RED}ERROR: Could not find x86_64 Java installation!${NC}"
+    echo -e "${RED}ERROR: Could not find an x86_64 Java installation!${NC}"
     echo ""
-    echo "Please install x86_64 Java 8:"
+    echo "The SimpleBGC GUI serial connection needs an x86_64 Java runtime."
+    echo "ARM64-only Java installs can start Java apps, but cannot load the"
+    echo "x86_64 serial library used by this GUI."
     echo ""
-    echo "1. Download from: https://adoptium.net/temurin/releases/?version=8"
-    echo "2. Choose: ${YELLOW}Temurin 8 • macOS • x64 .pkg${NC} (NOT ARM64)"
-    echo "3. Install the package"
-    echo "4. Run this script again"
-    echo ""
-    echo "For detailed instructions, see: ../INSTALLATION_MAC.md"
+    echo "Install any x86_64 macOS Java runtime, for example:"
+    echo "1. Download from: https://adoptium.net/temurin/releases/"
+    echo "2. Choose: ${YELLOW}macOS • x64${NC} (NOT AArch64 / ARM64)"
+    echo "3. Any suitable version is accepted, including 8, 11, 17, 21, or 25"
+    echo "4. Install the package and run this script again"
     exit 1
 fi
 
