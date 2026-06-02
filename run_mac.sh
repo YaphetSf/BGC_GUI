@@ -115,6 +115,15 @@ ensure_rosetta() {
 
 ensure_rosetta
 
+if [ "$ARCH" = "arm64" ] && { [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_TTY" ]; }; then
+    echo -e "${YELLOW}WARNING: This looks like an SSH session.${NC}"
+    echo "SimpleBGC GUI is a desktop Swing app and must run in a macOS desktop session."
+    echo "The install is complete; run this on the Mac's local Terminal instead:"
+    echo "  $SCRIPT_DIR/run_mac.sh"
+    echo ""
+    exit 2
+fi
+
 # Find any x86_64 Java runtime. Java 8, 11, 17, 21, 25, etc. are all accepted
 # as long as the runtime can load the x86_64 serial native library bundled with
 # SimpleBGC GUI.

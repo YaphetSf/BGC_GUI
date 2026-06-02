@@ -10,7 +10,7 @@ NC='\033[0m'
 
 REPO_URL="https://github.com/YaphetSf/BGC_GUI.git"
 ZIP_URL="https://github.com/YaphetSf/BGC_GUI/archive/refs/heads/main.zip"
-DEFAULT_INSTALL_DIR="$HOME/BGC_GUI"
+DEFAULT_INSTALL_DIR="$PWD/BGC_GUI"
 INSTALL_DIR="${BGC_GUI_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
 TEMURIN_VERSION="${BGC_GUI_JAVA_VERSION:-25}"
 TEMURIN_API_URL="https://api.adoptium.net/v3/binary/latest/${TEMURIN_VERSION}/ga/mac/x64/jre/hotspot/normal/eclipse"
@@ -214,7 +214,7 @@ download_with_git() {
         echo "  $INSTALL_DIR"
         echo ""
         echo "Choose a different path:"
-        echo "  curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash -s -- --dir ~/BGC_GUI_2"
+        echo "  curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash -s -- --dir ./BGC_GUI_2"
         exit 1
     fi
 

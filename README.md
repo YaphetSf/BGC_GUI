@@ -12,7 +12,7 @@ On first launch, `run_mac.sh` automatically extracts it into `SimpleBGC_GUI/` an
 
 ### Java Requirements
 
-For one-command install, no manual Java setup is needed. If no x86_64 Java runtime is found, `install.sh` automatically downloads Eclipse Temurin x64 JRE into `~/BGC_GUI/.java/`.
+For one-command install, no manual Java setup is needed. If no x86_64 Java runtime is found, `install.sh` automatically downloads Eclipse Temurin x64 JRE into `BGC_GUI/.java/` inside the install folder.
 
 For manual run, install an x86_64 (Intel) Java runtime. The Java version does not need to be 8; newer versions such as 11, 17, 21, or 25 are also accepted.
    - Visit [adoptium.net/temurin/releases](https://adoptium.net/temurin/releases/).
@@ -30,13 +30,15 @@ Run this in Terminal:
 curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash
 ```
 
-This downloads the launcher helper repo into `~/BGC_GUI`, runs `chmod +x run_mac.sh`, and starts `run_mac.sh`.
+This downloads the launcher helper repo into `BGC_GUI/` under the current Terminal folder, runs `chmod +x run_mac.sh`, and starts `run_mac.sh`.
 
 To install somewhere else:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/YaphetSf/BGC_GUI/main/install.sh | bash -s -- --dir ~/Applications/BGC_GUI
 ```
+
+To update an existing install, run the command from the folder that contains `BGC_GUI/`, or pass that path with `--dir`.
 
 To install without starting the launcher immediately:
 
